@@ -558,34 +558,40 @@ namespace Realms
             var objectPtr = IntPtr.Zero;
 
             object pkValue;
-            if (update && metadata.Helper.TryGetPrimaryKeyValue(obj, out pkValue))
+            bool isNew;
+            if (metadata.Helper.TryGetPrimaryKeyValue(obj, out pkValue))
             {
-                if (pkValue is string)
+                if (pkValue == null)
                 {
-                    objectPtr = metadata.Table.Find(SharedRealmHandle, (string)pkValue);
+                    if (metadata.Schema.PrimaryKeyProperty.Value.Type == PropertyType.String)
+                    {
+                        throw new ArgumentNullException(nameof(pkValue), "Object identifiers cannot be null");
+                    }
+
+                    objectPtr = SharedRealmHandle.CreateObject(metadata.Table, update, out isNew);
                 }
-                else if (pkValue == null)
+                else if (pkValue is string)
                 {
-                    objectPtr = metadata.Table.Find(SharedRealmHandle, (long?)null);
+                    objectPtr = SharedRealmHandle.CreateObject(metadata.Table, (string)pkValue, update, out isNew);
                 }
                 else
                 {
                     // We know it must be convertible to long, so optimistically do it.
-                    objectPtr = metadata.Table.Find(SharedRealmHandle, Convert.ToInt64(pkValue));
+                    objectPtr = SharedRealmHandle.CreateObject(metadata.Table, Convert.ToInt64(pkValue), update, out isNew);
                 }
             }
-
-            var setPrimaryKey = false;
-            if (objectPtr == IntPtr.Zero)
+            else
             {
-                objectPtr = metadata.Table.AddEmptyObject(SharedRealmHandle);
-                setPrimaryKey = true;
+                isNew = true; // Objects without PK are always new
+                objectPtr = SharedRealmHandle.CreateObject(metadata.Table);
             }
 
             var objectHandle = CreateObjectHandle(objectPtr, SharedRealmHandle);
 
             obj._SetOwner(this, objectHandle, metadata);
-            metadata.Helper.CopyToRealm(obj, update, setPrimaryKey);
+
+            // If an object is newly created, we don't need to invoke setters of properties with default values.
+            metadata.Helper.CopyToRealm(obj, update, isNew);
         }
 
         /// <summary>
