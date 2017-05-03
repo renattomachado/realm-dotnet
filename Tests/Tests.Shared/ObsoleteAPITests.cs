@@ -29,21 +29,5 @@ namespace Tests.Database
     [TestFixture, Preserve(AllMembers = true)]
     public class ObsoleteAPITests : RealmInstanceTest
     {
-        [Test]
-        public void CreateObjectTest()
-        {
-            // Arrange and act
-            _realm.Write(() => _realm.CreateObject<Person>());
-
-            // Assert
-            var people = _realm.All<Person>();
-            Assert.That(people.Count(), Is.EqualTo(1));
-
-            var person = people.Single();
-
-            _realm.Write(() => person.FirstName = "John");
-
-            Assert.That(person.FirstName, Is.EqualTo("John"));
-        }
     }
 }
