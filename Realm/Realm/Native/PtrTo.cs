@@ -18,7 +18,7 @@
 
 using System;
 using System.Runtime.InteropServices;
-using DotNetCross.Memory;
+using System.Runtime.CompilerServices;
 
 namespace Realms
 {
