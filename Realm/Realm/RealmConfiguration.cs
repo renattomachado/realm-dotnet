@@ -18,6 +18,7 @@
 
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Realms.Exceptions;
 using Realms.Schema;
 
@@ -149,6 +150,11 @@ namespace Realms
 
             srHandle.SetHandle(srPtr);
             return new Realm(srHandle, this, schema);
+        }
+
+        internal override Task<Realm> CreateRealmAsync(RealmSchema schema)
+        {
+            return Task.FromResult(CreateRealm(schema));
         }
     }
 }
